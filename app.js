@@ -4,6 +4,7 @@ var cookieParser = require('cookie-parser');
 
 // 导入路由
 var indexRouter = require('./routes/index');
+var loginRouter = require('./routes/login')
 var usersRouter = require('./routes/users');
 var registRouter = require('./routes/regist');
 // ---------------------------------------
@@ -22,7 +23,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 绑定路由
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
+app.use('/api/login', loginRouter)
+app.use('/api/users', usersRouter);
 app.use('/api/regist', registRouter);
 // ---------------------------------------
 
