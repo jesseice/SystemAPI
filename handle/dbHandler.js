@@ -1,5 +1,9 @@
 var dbUtil = require('../util/dbconfig')
-const crypto = require('../util/crypto')
+// const crypto = require('../util/crypto')
+
+const jwt = require('jsonwebtoken')
+
+const secretKey = 'wuyingdong ^*_*^ 123'
 // 获取用户信息
 const getUsers = (req, res, next)=> {
   let sql = 'select * from web_system.users'
@@ -24,21 +28,27 @@ const checkAcount = (req, res, next) => {
   const callback = (err, result) => {
     if(err){return res.send('400')}
     let msg = ''
+    let code = ''
+    let token = ''
     if(result.length){
       if (result[0].user_password!==req.body.userPassword){
         console.log(result);
-        msg = `${result.length}`
+        msg = '密码错误'
+        code = '400'
         // msg = '密码错误！请重新输入!'
       }else{
-        msg = '登录成功！'
+        msg = '登录成功!'
+        code = '200'
+        token = jwt.sign({ user_id: result[0].user_id, user_name: req.body.userName }, secretKey, { expiresIn: '240h' })
       }
     }else{
+      code = '400'
       msg = '不存在该用户!'
     }
     res.send({
-      code: 200,
+      code,
       msg,
-      data: result
+      token
     })
   }
   dbUtil.sqlConnect(sql, sqlObj, callback)
