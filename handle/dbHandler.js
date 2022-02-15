@@ -89,10 +89,31 @@ const registUser = (req, res, next) => {
   dbUtil.sqlConnect(sql,sqlObj,callback)
 }
 
+// 获取考试试题
+const getSubject = (req, res, next) => {
+  let sql = 'select * from web_system.subject'
+  let sqlObj = {}
+  let callback = (err, result) => {
+    // if(!req.user){
+    //   res.send('未登录!')
+    // }
+    if (err) { return console.log('获取信息失败!') }
+    console.log('成功');
+    res.send({
+      code: 200,
+      msg: '获取成功',
+      data: result
+    })
+  }
+
+  dbUtil.sqlConnect(sql, sqlObj, callback)
+}
+
 
 
 module.exports = {
   getUsers,
   registUser,
-  checkAcount
+  checkAcount,
+  getSubject
 }

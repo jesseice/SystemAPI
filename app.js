@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var loginRouter = require('./routes/login')
 var usersRouter = require('./routes/users');
 var registRouter = require('./routes/regist');
+var examRouter = require('./routes/exam')
 // ---------------------------------------
 
 const cors = require('cors')
@@ -29,6 +30,7 @@ app.use('/', indexRouter);
 app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter);
 app.use('/api/regist', registRouter);
+app.use('/api/exam', examRouter)
 // ---------------------------------------
 
 server.listen(3000)
