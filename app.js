@@ -6,9 +6,9 @@ const expressJWT = require('express-jwt')
 // 导入路由
 var indexRouter = require('./routes/index');
 var loginRouter = require('./routes/login')
-var usersRouter = require('./routes/users');
 var registRouter = require('./routes/regist');
 var examRouter = require('./routes/exam')
+var commitResult = require('./routes/commitResult')
 // ---------------------------------------
 
 const cors = require('cors')
@@ -28,10 +28,23 @@ app.use(expressJWT({ secret: secretKey, algorithms: ['HS256'] }).unless({ path: 
 // 绑定路由
 app.use('/', indexRouter);
 app.use('/api/login', loginRouter)
-app.use('/api/users', usersRouter);
 app.use('/api/regist', registRouter);
-app.use('/api/exam', examRouter)
+app.use('/user/exam', examRouter)
+app.use('/user/cmtresult',commitResult)
 // ---------------------------------------
+
+app.use((err,req,res,next)=>{
+  if (err.name === 'UnauthorizedError'){
+    return res.send({
+      code:401,
+      msg:'无效的token'
+    })
+  }
+  res.send({
+    code:500,
+    msg:'未知错误'
+  })
+})
 
 server.listen(3000)
 

@@ -1,4 +1,5 @@
-var dbUtil = require('../util/dbconfig')
+const dbUtil = require('../util/dbconfig')
+const random = require('../util/random')
 // const crypto = require('../util/crypto')
 
 const jwt = require('jsonwebtoken')
@@ -89,16 +90,15 @@ const registUser = (req, res, next) => {
   dbUtil.sqlConnect(sql,sqlObj,callback)
 }
 
-// 获取考试试题
+// 获取随机考试试题
 const getSubject = (req, res, next) => {
-  let sql = 'select * from web_system.subject'
-  let sqlObj = {}
+  //random的参数需要冲req.body中取   或者不用
+  let arr = random(7,4)
+  let sql = 'select subject_id,subject_title,subject_select,subject_type from web_system.subject where subject_id in (?)'
+  let sqlObj = { subject_id:arr}
   let callback = (err, result) => {
-    // if(!req.user){
-    //   res.send('未登录!')
-    // }
     if (err) { return console.log('获取信息失败!') }
-    console.log('成功');
+    console.log('获取试题成功');
     res.send({
       code: 200,
       msg: '获取成功',
@@ -109,11 +109,28 @@ const getSubject = (req, res, next) => {
   dbUtil.sqlConnect(sql, sqlObj, callback)
 }
 
+// 前端提交答案的api
+const commitResult = (req,res,next)=>{
+  let sql = 'select subject_id,subject_result from web_system.subject where subject_id in (?)'
+  // const body = req.body
+  let sqlObj = {subject_id:[1,2,3]}
+  let callback = (err,result) =>{
+    if(err){ return console.log(err)}
+    res.send({
+      code:200,
+      msg:'获取成功',
+      data:result
+    })
+  }
+  dbUtil.sqlConnect(sql,sqlObj,callback)
+}
+
 
 
 module.exports = {
   getUsers,
   registUser,
   checkAcount,
-  getSubject
+  getSubject,
+  commitResult
 }
