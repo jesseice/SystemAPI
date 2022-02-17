@@ -1,11 +1,12 @@
 module.exports = (max,acount)=>{
+  if(max<acount){return false}
   let arr = []
   if(max === acount){
     for(let i = 1;i<=max;i++){
       arr.push(i)
     }
   }else{
-    while(arr.length<acount){
+    while(arr.length<=acount){
       const a = Math.floor(Math.random()*max+1)
       if(!isRepeat(arr,a)){
         arr.push(a)

@@ -91,22 +91,30 @@ const registUser = (req, res, next) => {
 }
 
 // 获取随机考试试题
-const getSubject = (req, res, next) => {
+const getSubject =async (req, res, next) => {
   //random的参数需要冲req.body中取   或者不用
-  let arr = random(7,4)
-  let sql = 'select subject_id,subject_title,subject_select,subject_type from web_system.subject where subject_id in (?)'
-  let sqlObj = { subject_id:arr}
-  let callback = (err, result) => {
-    if (err) { return console.log('获取信息失败!') }
-    console.log('获取试题成功');
-    res.send({
-      code: 200,
-      msg: '获取成功',
-      data: result
-    })
+  let subject = []
+  let arr = [random(6, 4), random(1, 1), random(1, 1)]
+  // if(!arr){return res.send('题库出错')}
+  // let sql = 'select subject_id,subject_title,subject_select,subject_type from web_system.subject2 where subject_id in (?)'
+  // let sqlObj = { subject_id:arr0}
+  // let callback = (err, result) => {
+  //   if (err) { return console.log('获取信息失败!') }
+  //   console.log('获取试题成功');
+  //   subject.push(...result)
+  // }
+  for(let i=0;i<3;i++){
+    let sql = `select subject_id,subject_title,subject_select,subject_type from web_system.subject${i} where subject_id in (?)`
+    let sqlObj = {subject_id:arr[i]}
+    // await dbUtil.sqlConnect(sql, sqlObj, callback)
+    const res = await dbUtil.SysqlConnect(sql, sqlObj)
+    subject.push(...res)
   }
-
-  dbUtil.sqlConnect(sql, sqlObj, callback)
+  res.send({
+    code: 200,
+    msg: '获取成功',
+    data: subject
+  })
 }
 
 // 前端提交答案的api
