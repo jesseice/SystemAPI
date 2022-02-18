@@ -1,5 +1,6 @@
 const dbUtil = require('../util/dbconfig')
 const random = require('../util/random')
+const computed = require('../util/computed')
 // const crypto = require('../util/crypto')
 
 const jwt = require('jsonwebtoken')
@@ -95,18 +96,9 @@ const getSubject =async (req, res, next) => {
   //random的参数需要冲req.body中取   或者不用
   let subject = []
   let arr = [random(6, 4), random(1, 1), random(1, 1)]
-  // if(!arr){return res.send('题库出错')}
-  // let sql = 'select subject_id,subject_title,subject_select,subject_type from web_system.subject2 where subject_id in (?)'
-  // let sqlObj = { subject_id:arr0}
-  // let callback = (err, result) => {
-  //   if (err) { return console.log('获取信息失败!') }
-  //   console.log('获取试题成功');
-  //   subject.push(...result)
-  // }
   for(let i=0;i<3;i++){
     let sql = `select subject_id,subject_title,subject_select,subject_type from web_system.subject${i} where subject_id in (?)`
     let sqlObj = {subject_id:arr[i]}
-    // await dbUtil.sqlConnect(sql, sqlObj, callback)
     const res = await dbUtil.SysqlConnect(sql, sqlObj)
     subject.push(...res)
   }
@@ -118,19 +110,31 @@ const getSubject =async (req, res, next) => {
 }
 
 // 前端提交答案的api
-const commitResult = (req,res,next)=>{
-  let sql = 'select subject_id,subject_result from web_system.subject where subject_id in (?)'
-  // const body = req.body
-  let sqlObj = {subject_id:[1,2,3]}
-  let callback = (err,result) =>{
-    if(err){ return console.log(err)}
-    res.send({
-      code:200,
-      msg:'获取成功',
-      data:result
-    })
+const commitResult = async (req,res,next)=>{
+  const body = req.body
+  // let arr[0] = [] // 单选
+  // let arr[1] = [] // 判断
+  // let arr[2] = [] // 多选
+  let arr = [[], [], []]
+  for(let k in body){
+    for(let sk in body[k]){
+      arr[k].push(sk)
+    }
   }
-  dbUtil.sqlConnect(sql,sqlObj,callback)
+
+  let tall = []
+
+  for(let i=0;i<arr.length;i++){
+    let sql = `select subject_id,subject_result from web_system.subject${i} where subject_id in (?)`
+    let sqlObj = {subject_id: arr[i] }
+    const res  = await dbUtil.SysqlConnect(sql,sqlObj)
+    tall.push(res)
+  }
+  const r = computed(tall,body)
+  // console.log('---------------------');
+  // console.log(arr);
+  // console.log(tall);
+  res.send(r)
 }
 
 

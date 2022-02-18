@@ -1,7 +1,7 @@
-module.exports = (max,acount)=>{
+module.exports =(max,acount)=>{
   if(max<acount){return false}
   let arr = []
-  if(max === acount){
+  if(max <= acount){
     for(let i = 1;i<=max;i++){
       arr.push(i)
     }
