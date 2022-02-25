@@ -80,10 +80,10 @@ const registUser = (req, res, next) => {
     user_createtime: new Date()
   }
   const callback = (err, result) => {
-    if (err) { return res.send(err) }
+    if (err) { return res.send(err.sqlMessage) }
     if (res.affectedRows === 1) { console.log('注册成功'); }
     res.send({
-      status: 0,
+      status: 200,
       msg: '注册成功',
       data: req.body
     })
@@ -124,7 +124,7 @@ const commitResult = async (req,res,next)=>{
 
   let tall = []
 
-  for(let i=0;i<arr.length;i++){
+  for(let i=0;i<3;i++){
     let sql = `select subject_id,subject_result from web_system.subject${i} where subject_id in (?)`
     let sqlObj = {subject_id: arr[i] }
     const res  = await dbUtil.SysqlConnect(sql,sqlObj)
@@ -137,6 +137,35 @@ const commitResult = async (req,res,next)=>{
   res.send(r)
 }
 
+const createQuestion = (req,res,next)=>{
+/**
+ * {
+ *    
+ * }
+ */
+  const _body = req.body
+  const sql = `insert into web_system.subject${_body.subject_type} set ?`
+  const sqlObj = {
+    subject_title:_body.subject_title,
+    subject_select: _body.subject_select,
+    subject_result: _body.subject_result,
+  }
+  const callback = (err, result) => {
+    if (err) { return res.send(err.sqlMessage) }
+    if (res.affectedRows === 1) { console.log('创建题目成功'); }
+    res.send({
+      code: 200,
+      data: result,
+      msg: '创建题目成功'
+    })
+  }
+
+  dbUtil.sqlConnect(sql,sqlObj,callback)
+}
+
+// 创建题目
+
+
 
 
 module.exports = {
@@ -144,5 +173,6 @@ module.exports = {
   registUser,
   checkAcount,
   getSubject,
-  commitResult
+  commitResult,
+  createQuestion
 }

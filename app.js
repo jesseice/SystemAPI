@@ -9,6 +9,7 @@ var loginRouter = require('./routes/login')
 var registRouter = require('./routes/regist');
 var examRouter = require('./routes/exam')
 var commitResult = require('./routes/commitResult')
+var createQuestion = require('./routes/createQ')
 // ---------------------------------------
 
 const cors = require('cors')
@@ -31,6 +32,7 @@ app.use('/api/login', loginRouter)
 app.use('/api/regist', registRouter);
 app.use('/user/exam', examRouter)
 app.use('/user/cmtresult',commitResult)
+app.use('/user/createQ', createQuestion)
 // ---------------------------------------
 
 app.use((err,req,res,next)=>{
