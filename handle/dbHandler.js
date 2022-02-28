@@ -131,13 +131,11 @@ const commitResult = async (req,res,next)=>{
     tall.push(res)
   }
   const r = computed(tall,body)
-  // console.log('---------------------');
-  // console.log(arr);
-  // console.log(tall);
   res.send(r)
 }
 
-const createQuestion = (req,res,next)=>{
+// 创建题目
+const createQuestion = async (req,res,next)=>{
 /**
  * {
  *    
@@ -150,22 +148,54 @@ const createQuestion = (req,res,next)=>{
     subject_select: _body.subject_select,
     subject_result: _body.subject_result,
   }
-  const callback = (err, result) => {
-    if (err) { return res.send(err.sqlMessage) }
-    if (res.affectedRows === 1) { console.log('创建题目成功'); }
-    res.send({
-      code: 200,
-      data: result,
-      msg: '创建题目成功'
+  const sql1 = `select subject_id from web_system.subject${_body.subject_type} where subject_title = ?`
+  const sqlObj1 = [_body.subject_title]
+  const aa = await dbUtil.SysqlConnect(sql,sqlObj)
+  if (!aa.affectedRows === 1){
+    return res.send({
+      code:400,
+      msg:'前端错误'
     })
+  }else{
+    // 查找subject_id
+    const resd = await dbUtil.SysqlConnect(sql1, sqlObj1)
+    for(let i=0;i<_body.tags.length;i++){
+      try{
+        // 修改subject_tag表
+        await dbUtil.SysqlConnect(
+          `insert into web_system.subject${_body.subject_type}_tag set ?`,
+          { subject_id: resd[0].subject_id, tag_id: _body.tags[i] }
+        )
+      }catch(err){
+        res.send({code:500,msg:err})
+      }
+    }
   }
-
-  dbUtil.sqlConnect(sql,sqlObj,callback)
+  res.send({
+    code: 200,
+    data: aa,
+    msg: '创建题目成功'
+  })
 }
 
-// 创建题目
 
-
+const getTag = (req,res,next)=>{
+  const sql ='select * from web_system.tag order by tag_id asc'
+  const callBack = (err,result)=>{
+    if(err){
+      return res.send({
+        code:500,
+        msg: err.sqlMessage
+      })
+    }
+    res.send({
+      code:200,
+      msg:'获取tag成功!',
+      data:result
+    })
+  }
+  dbUtil.sqlConnect(sql,callBack)
+}
 
 
 module.exports = {
@@ -174,5 +204,6 @@ module.exports = {
   checkAcount,
   getSubject,
   commitResult,
-  createQuestion
+  createQuestion,
+  getTag
 }

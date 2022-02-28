@@ -10,6 +10,7 @@ var registRouter = require('./routes/regist');
 var examRouter = require('./routes/exam')
 var commitResult = require('./routes/commitResult')
 var createQuestion = require('./routes/createQ')
+var getTag = require('./routes/getTag')
 // ---------------------------------------
 
 const cors = require('cors')
@@ -33,6 +34,7 @@ app.use('/api/regist', registRouter);
 app.use('/user/exam', examRouter)
 app.use('/user/cmtresult',commitResult)
 app.use('/user/createQ', createQuestion)
+app.use('/api/getTag', getTag)
 // ---------------------------------------
 
 app.use((err,req,res,next)=>{
