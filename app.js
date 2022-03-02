@@ -40,8 +40,8 @@ app.use('/api/getTag', getTag)
 app.use((err,req,res,next)=>{
   if (err.name === 'UnauthorizedError'){
     return res.send({
-      code:401,
-      msg:'无效的token'
+      code:1004,
+      msg:'未登录'
     })
   }
   res.send({

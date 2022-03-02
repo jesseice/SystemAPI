@@ -151,25 +151,26 @@ const createQuestion = async (req,res,next)=>{
   const sql1 = `select subject_id from web_system.subject${_body.subject_type} where subject_title = ?`
   const sqlObj1 = [_body.subject_title]
   const aa = await dbUtil.SysqlConnect(sql,sqlObj)
-  if (!aa.affectedRows === 1){
-    return res.send({
-      code:400,
-      msg:'前端错误'
-    })
-  }else{
+  console.log(aa);
+  if (aa.affectedRows&&aa.affectedRows === 1){
     // 查找subject_id
     const resd = await dbUtil.SysqlConnect(sql1, sqlObj1)
-    for(let i=0;i<_body.tags.length;i++){
-      try{
+    for (let i = 0; i < _body.tags.length; i++) {
+      try {
         // 修改subject_tag表
         await dbUtil.SysqlConnect(
           `insert into web_system.subject${_body.subject_type}_tag set ?`,
           { subject_id: resd[0].subject_id, tag_id: _body.tags[i] }
         )
-      }catch(err){
-        res.send({code:500,msg:err})
+      } catch (err) {
+        res.send({ code: 500, msg: err })
       }
     }
+  }else{
+    return res.send({
+      code:400,
+      msg:'前端错误'
+    })
   }
   res.send({
     code: 200,
