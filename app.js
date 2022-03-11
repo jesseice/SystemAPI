@@ -11,6 +11,7 @@ var examRouter = require('./routes/exam')
 var commitResult = require('./routes/commitResult')
 var createQuestion = require('./routes/createQ')
 var getTag = require('./routes/getTag')
+var getSubNum = require('./routes/getSubNum')
 // ---------------------------------------
 
 const cors = require('cors')
@@ -31,10 +32,11 @@ app.use(expressJWT({ secret: secretKey, algorithms: ['HS256'] }).unless({ path: 
 app.use('/', indexRouter);
 app.use('/api/login', loginRouter)
 app.use('/api/regist', registRouter);
-app.use('/user/exam', examRouter)
-app.use('/user/cmtresult',commitResult)
-app.use('/user/createQ', createQuestion)
 app.use('/api/getTag', getTag)
+app.use('/api/getSubNum', getSubNum)
+app.use('/user/exam', examRouter)
+app.use('/user/cmtresult', commitResult)
+app.use('/user/createQ', createQuestion)
 // ---------------------------------------
 
 app.use((err,req,res,next)=>{

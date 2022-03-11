@@ -70,6 +70,7 @@ const checkAcount = (req, res, next) => {
 
 // 注册用户
 const registUser = (req, res, next) => {
+  console.log(req.body);
   const body = req.body
   const sql = 'insert into web_system.users SET ?'
   const sqlObj = {
@@ -91,9 +92,20 @@ const registUser = (req, res, next) => {
   dbUtil.sqlConnect(sql,sqlObj,callback)
 }
 
+// 获取试题数量
+const getSubNum = async (req,res,next)=>{
+  res.send({
+    code:'200',
+    msg:'获取成功',
+    data:[20,10,5]
+  })
+}
+
+
 // 获取随机考试试题
 const getSubject =async (req, res, next) => {
   //random的参数需要冲req.body中取   或者不用
+  console.log(req.body);
   let subject = []
   let arr = [random(6, 4), random(1, 1), random(1, 1)]
   for(let i=0;i<3;i++){
@@ -206,5 +218,6 @@ module.exports = {
   getSubject,
   commitResult,
   createQuestion,
-  getTag
+  getTag,
+  getSubNum
 }
