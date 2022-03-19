@@ -6,6 +6,23 @@ const computed = require('../util/computed')
 const jwt = require('jsonwebtoken')
 
 const secretKey = 'wuyingdong ^*_*^ 123'
+
+// 保存试题数据
+const subObject = {
+  radio:{
+    count:0,
+    listId:[]
+  },
+  judge:{
+    count:0,
+    listId:[]
+  },
+  multi:{
+    count:0,
+    listId:[]
+  },
+  
+}
 // 获取用户信息
 const getUsers = (req, res, next)=> {
   let sql = 'select * from web_system.users'
@@ -94,10 +111,36 @@ const registUser = (req, res, next) => {
 
 // 获取试题数量
 const getSubNum = async (req,res,next)=>{
+  // let radio = 0, judge = 0, multi = 0
+  let temp = []
+  for(let i=0; i<3; i++){
+    temp[i] = []
+    try{
+      const sql = `select subject_id from web_system.subject${i}`
+      const res = await dbUtil.SysqlConnect(sql, {})
+      for(let k in res){
+        temp[i].push(res[k].subject_id)
+      }
+    }catch(err){
+      res.send({
+        code:500,
+        msg:'未知错误'
+      })
+    }
+  }
+  
+  let cur = 0
+  for(let k in subObject){
+    subObject[k].listId.push(...temp[cur])
+    subObject[k].count = temp[cur].length > 100 ? 100 : temp[cur].length
+    cur++
+  }
+
+  // console.log(subObject)
   res.send({
     code:'200',
     msg:'获取成功',
-    data:[20,10,5]
+    data: [subObject.radio.count, subObject.judge.count, subObject.multi.count]
   })
 }
 
@@ -105,15 +148,31 @@ const getSubNum = async (req,res,next)=>{
 // 获取随机考试试题
 const getSubject =async (req, res, next) => {
   //random的参数需要冲req.body中取   或者不用
+  console.log('---');
   console.log(req.body);
+  console.log('---');
+  const _body = req.body
   let subject = []
-  let arr = [random(6, 4), random(1, 1), random(1, 1)]
+  let arr = [random(subObject.radio, _body[0]), random(subObject.judge, _body[1]), random(subObject.multi, _body[2])]
+ 
   for(let i=0;i<3;i++){
+    if(arr[i].length===0){continue}
     let sql = `select subject_id,subject_title,subject_select,subject_type from web_system.subject${i} where subject_id in (?)`
     let sqlObj = {subject_id:arr[i]}
-    const res = await dbUtil.SysqlConnect(sql, sqlObj)
-    subject.push(...res)
+    try{
+      const res = await dbUtil.SysqlConnect(sql, sqlObj)
+      subject.push(...res)
+    }catch(err){
+      res.send({
+        code:500,
+        msg:'未知错误'
+      })
+    }
   }
+  // console.log('----')
+  // console.log(arr)
+  // console.log(subject)
+  // console.log('----')
   res.send({
     code: 200,
     msg: '获取成功',
