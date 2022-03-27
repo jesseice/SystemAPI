@@ -4,14 +4,9 @@ var cookieParser = require('cookie-parser');
 const expressJWT = require('express-jwt')
 
 // 导入路由
-var indexRouter = require('./routes/index');
-var loginRouter = require('./routes/login')
-var registRouter = require('./routes/regist');
+var userRouter = require('./routes/user')
 var examRouter = require('./routes/exam')
-var commitResult = require('./routes/commitResult')
-var createQuestion = require('./routes/createQ')
-var getTag = require('./routes/getTag')
-var getSubNum = require('./routes/getSubNum')
+var createQRouter = require('./routes/createQ')
 // ---------------------------------------
 
 const cors = require('cors')
@@ -29,14 +24,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(expressJWT({ secret: secretKey, algorithms: ['HS256'] }).unless({ path: [/\/api\//] }))
 
 // 绑定路由
-app.use('/api/login', loginRouter)
-app.use('/api/regist', registRouter);
-app.use('/api/getTag', getTag)
-app.use('/api/getSubNum', getSubNum)
-app.use('/user/getInfo', indexRouter);
-app.use('/user/exam', examRouter)
-app.use('/user/cmtresult', commitResult)
-app.use('/user/createQ', createQuestion)
+app.use('/', userRouter);
+app.use('/', examRouter)
+app.use('/', createQRouter)
 // ---------------------------------------
 
 app.use((err,req,res,next)=>{
