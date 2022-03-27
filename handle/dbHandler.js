@@ -25,8 +25,9 @@ const subObject = {
 }
 // 获取用户信息
 const getUsers = (req, res, next)=> {
-  let sql = 'select * from web_system.users'
-  let sqlObj = {}
+  let user = req.user
+  let sql = 'select user_name,user_phone,user_avatar,user_sex,user_createtime,user_avatar from web_system.users where user_id = ?'
+  let sqlObj = user.user_id
   let callback = (err, result) => {
     if (err) { return console.log('获取信息失败!') }
     console.log('成功');
@@ -54,10 +55,10 @@ const checkAcount = (req, res, next) => {
         console.log(result);
         msg = '密码错误'
         code = '400'
-        // msg = '密码错误！请重新输入!'
       }else{
         msg = '登录成功!'
         code = '200'
+        // 生成token
         token = jwt.sign({ user_id: result[0].user_id, user_name: req.body.userName }, secretKey, { expiresIn: '240h' })
       }
     }else{
@@ -72,18 +73,6 @@ const checkAcount = (req, res, next) => {
   }
   dbUtil.sqlConnect(sql, sqlObj, callback)
 }
-// const checkAcount = async (req,res,next)=>{
-//   const sql = 'select * from web_system.users where user_name = ?'
-//   console.log(req.query)
-//   const sqlObj = {user_name:req.query.userName}
-//   let res = await dbUtil.SysqlConnect(sql,sqlObj);
-//   console.log(res);
-//   if(res.length){
-//     console.log(res);
-//   }else{
-//      console.log(res);
-//   }
-// }
 
 // 注册用户
 const registUser = (req, res, next) => {
@@ -148,19 +137,20 @@ const getSubNum = async (req,res,next)=>{
 // 获取随机考试试题
 const getSubject =async (req, res, next) => {
   //random的参数需要冲req.body中取   或者不用
-  console.log('---');
-  console.log(req.body);
-  console.log('---');
+  // console.log('---');
+  // console.log(req.body);
+  // console.log('---');
   const _body = req.body
   let subject = []
   let arr = [random(subObject.radio, _body[0]), random(subObject.judge, _body[1]), random(subObject.multi, _body[2])]
- 
+  console.log(arr)
   for(let i=0;i<3;i++){
     if(arr[i].length===0){continue}
     let sql = `select subject_id,subject_title,subject_select,subject_type from web_system.subject${i} where subject_id in (?)`
-    let sqlObj = {subject_id:arr[i]}
+    let sqlObj = arr[i].length===1?arr[i]: { subject_id:arr[i] }
     try{
-      const res = await dbUtil.SysqlConnect(sql, sqlObj)
+      let res
+      await dbUtil.SysqlConnect(sql, sqlObj).then((e)=>res = e)
       subject.push(...res)
     }catch(err){
       res.send({
@@ -194,11 +184,14 @@ const commitResult = async (req,res,next)=>{
   }
 
   let tall = []
-
+  // console.log('++++++');
+  // console.log(arr);
+  // console.log('++++++');
   for(let i=0;i<3;i++){
+    if (arr[i].length === 0) { continue }
     let sql = `select subject_id,subject_result from web_system.subject${i} where subject_id in (?)`
-    let sqlObj = {subject_id: arr[i] }
-    const res  = await dbUtil.SysqlConnect(sql,sqlObj)
+    let sqlObj = arr[i].length === 1 ? arr[i] : { subject_id: arr[i] }
+    const res = await dbUtil.SysqlConnect(sql,sqlObj)
     tall.push(res)
   }
   const r = computed(tall,body)

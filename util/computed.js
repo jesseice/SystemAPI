@@ -11,12 +11,17 @@ const computed = (apiData,reqBody)=>{
       "2":{000001:"0"},
     }
   */
+
+// console.log('++++++');
+// console.log(apiData);
+// console.log('++++++');
   let zq = 0
   let count = 0
   let errId = {0:[],1:[],2:[]}  
   let apiObj = {0:{},1:{},2:{}}
   apiData.forEach((val,ind)=>{
     //val =  [{},{}]
+    if(val.length===0){return}
     for(let j=0;j<val.length;j++){
       count++
       apiObj[ind][`${val[j].subject_id}`] = val[j].subject_result

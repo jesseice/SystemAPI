@@ -29,11 +29,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(expressJWT({ secret: secretKey, algorithms: ['HS256'] }).unless({ path: [/\/api\//] }))
 
 // 绑定路由
-app.use('/', indexRouter);
 app.use('/api/login', loginRouter)
 app.use('/api/regist', registRouter);
 app.use('/api/getTag', getTag)
 app.use('/api/getSubNum', getSubNum)
+app.use('/user/getInfo', indexRouter);
 app.use('/user/exam', examRouter)
 app.use('/user/cmtresult', commitResult)
 app.use('/user/createQ', createQuestion)
