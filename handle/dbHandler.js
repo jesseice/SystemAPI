@@ -87,7 +87,9 @@ const registUser = (req, res, next) => {
     user_createtime: new Date()
   }
   const callback = (err, result) => {
-    if (err) { return res.send(err.sqlMessage) }
+    if (err) { return res.send({
+      code:400,
+      msg:err.sqlMessage}) }
     if (res.affectedRows === 1) { console.log('注册成功'); }
     res.send({
       status: 200,
