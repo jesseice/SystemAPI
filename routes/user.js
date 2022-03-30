@@ -10,4 +10,7 @@ router.post('/api/login', dbHandler.checkAcount);
 // 注册
 router.post('/api/regist', dbHandler.registUser);
 
+// 获取好友信息
+router.get('/user/friend',dbHandler.getFriendList)
+
 module.exports = router

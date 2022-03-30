@@ -245,7 +245,7 @@ const createQuestion = async (req,res,next)=>{
   })
 }
 
-
+// 获取标签
 const getTag = (req,res,next)=>{
   const sql ='select * from web_system.tag order by tag_id asc'
   const callBack = (err,result)=>{
@@ -264,7 +264,27 @@ const getTag = (req,res,next)=>{
   dbUtil.sqlConnect(sql,callBack)
 }
 
-
+// 获取好友信息
+const getFriendList = (req,res,next)=>{
+  const user = req.user
+  // select friend_id, user_name, user_avatar from(web_system.friend_list as a) left join(web_system.users as b) on a.friend_id = b.user_id where a.user_id = 66
+  const sql = 'select friend_id,friend_name,user_name, user_avatar as friend_avatar,last_news as news,last_time as time from(web_system.friend_list as a) left join(web_system.users as b) on a.friend_id = b.user_id where a.user_id = ?'
+  const sqlObj = user.user_id
+  const callBack = (err , result)=>{
+    if(err){
+      return res.send({
+        code:500,
+        msg:'获取好友列表失败！'
+      })
+    }
+    res.send({
+      code:200,
+      msg:'获取成功',
+      data: result
+    })
+  }
+  dbUtil.sqlConnect(sql,sqlObj,callBack)
+}
 module.exports = {
   getUsers,
   registUser,
@@ -273,5 +293,6 @@ module.exports = {
   commitResult,
   createQuestion,
   getTag,
-  getSubNum
+  getSubNum,
+  getFriendList
 }
