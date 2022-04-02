@@ -26,7 +26,7 @@ const subObject = {
 // 获取用户信息
 const getUsers = (req, res, next)=> {
   let user = req.user
-  let sql = 'select user_name,user_phone,user_avatar,user_sex,user_createtime,user_avatar from web_system.users where user_id = ?'
+  let sql = 'select user_id, user_name,user_phone,user_avatar,user_sex,user_createtime,user_avatar from web_system.users where user_id = ?'
   let sqlObj = user.user_id
   let callback = (err, result) => {
     if (err) { return console.log('获取信息失败!') }
@@ -59,7 +59,7 @@ const checkAcount = (req, res, next) => {
         msg = '登录成功!'
         code = '200'
         // 生成token
-        token = jwt.sign({ user_id: result[0].user_id, user_name: req.body.userName }, secretKey, { expiresIn: '240h' })
+        token = jwt.sign({ user_id: result[0].user_id, user_name: req.body.userName }, secretKey, { expiresIn: '24h' })
       }
     }else{
       code = '400'
