@@ -11,10 +11,10 @@ class Msg {
   }
 
   // 装载聊天数据
-  inputMsg(whoSend, msg) {
-    if (!msg) { return false }
+  inputMsg(whoSend,msg){
+    if(!msg){return false}
     //初始时判断
-    if (this.isOnce(whoSend)) {
+    if(this.isOnce(whoSend)){
       this.whoSends.push(whoSend)
 
       this.msgObj.set(whoSend, [])
@@ -24,14 +24,14 @@ class Msg {
   }
 
   // 输出聊天记录
-  outputMsg(whoSend) {
-    if (!this.isEmpty(whoSend)) {
+  outputMsg(whoSend){
+    if(!this.isEmpty(whoSend)){
       return this.msgObj.get(whoSend).shift()
     }
   }
 
   // 判断whoSend是否是第二条消息发到这个whoMsg
-  isOnce(whoSend) {
+  isOnce(whoSend){
     return !this.msgObj.has(whoSend)
   }
 
@@ -54,14 +54,28 @@ class Msg {
     return this.getMsg(whoSend).length
   }
   // 入栈
-  pushMsgArr(whoSend, msg) {
+  pushMsgArr(whoSend,msg) {
     this.msgObj.get(whoSend).push(msg)
   }
 
   // 是否为空
-  isEmpty(whoSend) {
+  isEmpty(whoSend){
     return this.getSize(whoSend) === 0
   }
 }
 
 module.exports = Msg
+
+const c = new Msg('wuyingdong')
+c.inputMsg('xiaobaobao', '睡觉没有')
+c.inputMsg('xiaobingkuai','吃饭没有')
+c.inputMsg('xiaobingkuai','没吃就来我家吃')
+c.inputMsg('xiaobaobao','没睡就来这里睡')
+console.log(c.getWhoSends().length);
+for (let i = 0; i < c.getWhoSends().length; i++){
+  let whoSend = c.getWhoSends()[i]
+  let length = c.getSize(whoSend)
+  for (let index = 0; index < length; index++) {
+    console.log(`${whoSend}发的消息:`,c.outputMsg(whoSend))
+  }
+}

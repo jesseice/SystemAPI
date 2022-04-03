@@ -51,9 +51,10 @@ io.on("connection", (socket) => {
     // 离线状态 anotherSocketId为null
     if (!anotherSocketId){
       if (!leaveNews.get(anotherName)){
-        leaveNews.set(anotherName, new Msg(anotherName, authorName))
+        
+        leaveNews.set(anotherName, new Msg(anotherName))
       }
-      leaveNews.get(anotherName).pushMsgArr(msg)
+      leaveNews.get(anotherName).inputMsg(authorName, msg)
     }else{
       socket.to(anotherSocketId).emit("private message", socket.id, msg, authorName);
     }
@@ -62,11 +63,16 @@ io.on("connection", (socket) => {
   // 进入消息页面后检查是否有自己的离线消息
   socket.on('check leave msg',(authorName)=>{
     if(leaveNews.has(authorName)){
-      let curObj = leaveNews.get(authorName)
-      let len = curObj.getSize()
+      let c = leaveNews.get(authorName)
       
-      for (let i = 0; i<len; i++){
-        socket.emit('check leave msg', curObj.getWhoSend(), curObj.shiftMsgArr())
+      for (let i = 0; i < c.getWhoSends().length; i++) {
+        let whoSend = c.getWhoSends()[i]
+        let length = c.getSize(whoSend)
+        for (let index = 0; index < length; index++) {
+          let msg = c.outputMsg(whoSend)
+          console.log(`${whoSend}发的消息:`, msg)
+          socket.emit('check leave msg', whoSend, msg)
+        }
       }
       leaveNews.delete(authorName)
       console.log('发送离线消息后的le:',leaveNews)
