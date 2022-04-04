@@ -30,7 +30,6 @@ const getUsers = (req, res, next)=> {
   let sqlObj = user.user_id
   let callback = (err, result) => {
     if (err) { return console.log('获取信息失败!') }
-    console.log('成功');
     res.send({
       code:200,
       msg:'获取成功',

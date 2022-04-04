@@ -25,19 +25,28 @@ const io = new Server(server, {
 })
 
 // 管理登录用户集合
-const sockets = new Map()
+const sockets = new Map() // {who1Login:socketId, who2Login:socketId}
 
 // 管理离线消息
-const leaveNews = new Map()
-// { 谁的消息（name）：new Msg(), 谁的消息（name）：new Msg(), 谁的消息（name）：new Msg() }
+const leaveNews = new Map() // {who1Msg:new Msg(whoMsg),who2Msg:new Msg(whoMsg)}
+
+//  登录用户是否进入聊天界面
+const usersInChat = new Map() // {whoLogin:true|false}   true:在聊天室 false:不在聊天室但是登录着
 
 // 连接后处理
 io.on("connection", (socket) => {
   // ...
+  console.log(socket.id)
   // 登录后设置账号和socket id键值对，并发送回去
   socket.on('set sockets',(user_name)=>{
     sockets.set(user_name,socket.id)
+    usersInChat.set(user_name,false)
     console.log(sockets)
+  })  
+
+  // 进入聊天页面设置usersInChat的状态
+  socket.on('is in chat page',(user_name, bool)=>{
+    usersInChat.set(user_name,bool)
   })
 
   // 点击好友时候查找好友的socketId
@@ -48,8 +57,8 @@ io.on("connection", (socket) => {
   // 私聊
   socket.on("private message", (anotherSocketId, anotherName, msg, authorName) => {
 
-    // 离线状态 anotherSocketId为null
-    if (!anotherSocketId){
+    // 离线状态 anotherSocketId为null || 没有进入聊天页面前端确实私聊监听也可以用离线状态的逻辑来处理消息
+    if (!anotherSocketId || !usersInChat.get(anotherName)){
       if (!leaveNews.get(anotherName)){
         
         leaveNews.set(anotherName, new Msg(anotherName))
@@ -60,7 +69,7 @@ io.on("connection", (socket) => {
     }
   })
 
-  // 进入消息页面后检查是否有自己的离线消息
+  // 进入聊天页面后检查是否有自己的离线消息
   socket.on('check leave msg',(authorName)=>{
     if(leaveNews.has(authorName)){
       let c = leaveNews.get(authorName)
