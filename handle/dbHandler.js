@@ -4,6 +4,7 @@ const computed = require('../util/computed')
 // const crypto = require('../util/crypto')
 
 const jwt = require('jsonwebtoken')
+const { send } = require('express/lib/response')
 
 const secretKey = 'wuyingdong ^*_*^ 123'
 
@@ -89,7 +90,7 @@ const registUser = (req, res, next) => {
     if (err) { return res.send({
       code:400,
       msg:err.sqlMessage}) }
-    if (res.affectedRows === 1) { console.log('注册成功'); }
+    if (result.affectedRows === 1) { console.log('注册成功'); }
     res.send({
       status: 200,
       msg: '注册成功',
@@ -213,19 +214,16 @@ const createQuestion = async (req,res,next)=>{
     subject_select: _body.subject_select,
     subject_result: _body.subject_result,
   }
-  const sql1 = `select subject_id from web_system.subject${_body.subject_type} where subject_title = ?`
-  const sqlObj1 = [_body.subject_title]
   const aa = await dbUtil.SysqlConnect(sql,sqlObj)
-  console.log(aa);
-  if (aa.affectedRows&&aa.affectedRows === 1){
-    // 查找subject_id
-    const resd = await dbUtil.SysqlConnect(sql1, sqlObj1)
+  console.log(aa)
+  let insertId = aa.insertId
+  if (aa&&aa.affectedRows === 1){
     for (let i = 0; i < _body.tags.length; i++) {
       try {
         // 修改subject_tag表
         await dbUtil.SysqlConnect(
-          `insert into web_system.subject${_body.subject_type}_tag set ?`,
-          { subject_id: resd[0].subject_id, tag_id: _body.tags[i] }
+          `insert into web_system.subject_tag set ?`,  
+          { subject_id: insertId, subject_type: _body.subject_type, tag_id: _body.tags[i] }
         )
       } catch (err) {
         res.send({ code: 500, msg: err })
@@ -266,7 +264,6 @@ const getTag = (req,res,next)=>{
 // 获取好友信息
 const getFriendList = (req,res,next)=>{
   const user = req.user
-  // select friend_id, user_name, user_avatar from(web_system.friend_list as a) left join(web_system.users as b) on a.friend_id = b.user_id where a.user_id = 66
   const sql = 'select friend_id,friend_name,user_name, user_avatar as friend_avatar,last_news as news,last_time as time from(web_system.friend_list as a) left join(web_system.users as b) on a.friend_id = b.user_id where a.user_id = ?'
   const sqlObj = user.user_id
   const callBack = (err , result)=>{
@@ -284,6 +281,139 @@ const getFriendList = (req,res,next)=>{
   }
   dbUtil.sqlConnect(sql,sqlObj,callBack)
 }
+
+// 获取个人题库信息
+const getPrivateTopic = async (req, res, next)=>{
+  // result =
+  // [{
+  //  pri_id: 1,
+  //  sbj_id: 1,
+  //  sbj_title: '下列哪个样式定义后,内联(非块状)元素可以定义宽度和高度',
+  //  sbj_type: 0
+  // },
+  //  {
+  //   pri_id: 2,
+  //   sbj_id: 3,
+  //   sbj_title: '新窗口打开网页，用到以下哪个值（）。',
+  //   sbj_type: 0
+  // }]
+  const user = req.user
+  const user_id = user.user_id
+  const sql = 'select id as pri_id, sbj_id, sbj_title, sbj_type from web_system.private_topic where user_id = ?'
+  const sqlObj = user_id
+  const result = await dbUtil.SysqlConnect(sql,sqlObj)
+  let newResult = [...result]
+  let length = result.length
+  for(let i = 0; i<length; i++){
+    let subject_id = result[i].sbj_id
+    let subject_type = result[i].sbj_type
+    const tags = await dbUtil.SysqlConnect(
+      'SELECT tag_name FROM web_system.subject_tag as a left join web_system.tag as b on a.tag_id = b.tag_id where subject_id = ? and subject_type = ?',
+      [subject_id, subject_type]
+    )
+    let newarr = []
+    tags.forEach(val => {
+      newarr.push(val.tag_name)
+    })
+    newResult[i].sbj_tag = [...newarr]
+  }
+  res.send(newResult)
+}
+
+// 题目类    取消收藏||收藏入个人题库
+const collectTopic = (req, res, next) =>{
+  const user_id = req.user.user_id
+  const sbj_id = req.body.sbj_id
+  const sbj_type = req.body.sbj_type
+  const sbj_title = req.body.sbj_title
+  const status = req.body.status
+  const pri_ids = req.body.pri_ids || []
+  if(status === 0){
+    dbUtil.sqlConnect(
+      `insert into web_system.private_topic set ?`,
+      {user_id, sbj_id, sbj_type, sbj_title},
+      (err, result) =>{
+        if (err) {
+          console.log(err)
+          return res.send({
+            code:500,
+            msg:'收藏失败',
+            status:0
+          })
+        }
+        if (result.affectedRows === 1){
+          res.send({
+            code:200,
+            msg:'收藏成功',
+            status:1
+          })
+        }
+      }
+    )
+  } else if (status === 1){
+    dbUtil.sqlConnect(
+      'delete from web_system.private_topic where user_id = ? and sbj_id = ? and sbj_type = ?',
+      [ user_id, sbj_id, sbj_type],
+      (err, result) =>{
+        if(err){
+          console.log(err)
+          return res.send({
+            code: 500,
+            msg: '取消收藏失败',
+            status: 1
+          })
+        }
+        if(result.affectedRows === 1){
+          return res.send({
+            code: 200,
+            msg: '取消收藏成功',
+            status: 0
+          })
+        }
+      }
+    )
+  }else{ // 删除题库的某个
+      dbUtil.sqlConnect(
+        'delete from web_system.private_topic where( id in (?))',
+        [pri_ids],
+        (err, result) =>{
+          if(err){
+            return res.send({
+              code:500,
+              msg:'操作个人题库失败'
+            })
+          }
+          if(result.affectedRows === pri_ids.length){
+            res.send({
+              code:200,
+              msg:'操作成功!',
+              data:result
+            })
+          }
+        }
+      )
+  }
+}
+
+// 判断是否该题被收藏
+const hasCollection = (req, res, next) =>{
+  const user_id = req.user.user_id
+  const sbj_id = req.body.sbj_id
+  const sbj_type = req.body.sbj_type
+  dbUtil.sqlConnect(
+    'select id from web_system.private_topic where user_id = ? and sbj_id = ? and sbj_type = ?',
+    [user_id, sbj_id, sbj_type],
+    (err, result) => {3
+      if(err){ return res.send('错误')}
+      res.send({
+        code:200,
+        msg:'成功',
+        status:result.length? 1:0 // 0没有收藏  1  收藏
+      })
+    }
+  )
+}
+
 module.exports = {
   getUsers,
   registUser,
@@ -293,5 +423,8 @@ module.exports = {
   createQuestion,
   getTag,
   getSubNum,
-  getFriendList
+  getFriendList,
+  getPrivateTopic,
+  collectTopic,
+  hasCollection
 }

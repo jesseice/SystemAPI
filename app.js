@@ -36,17 +36,25 @@ const usersInChat = new Map() // {whoLogin:true|false}   true:在聊天室 false
 // 连接后处理
 io.on("connection", (socket) => {
   // ...
-  console.log(socket.id)
+  // console.log(socket.id)
   // 登录后设置账号和socket id键值对，并发送回去
   socket.on('set sockets',(user_name)=>{
     sockets.set(user_name,socket.id)
     usersInChat.set(user_name,false)
+    // console.log(1);
     console.log(sockets)
   })  
 
   // 进入聊天页面设置usersInChat的状态
   socket.on('is in chat page',(user_name, bool)=>{
     usersInChat.set(user_name,bool)
+    console.log(2);
+  })
+
+  // 是否有消息
+  socket.on('is has msg', (authorName) => {
+    // console.log('进来了了:',authorName);
+    socket.emit('is has msg', leaveNews.has(authorName))
   })
 
   // 点击好友时候查找好友的socketId
@@ -64,6 +72,9 @@ io.on("connection", (socket) => {
         leaveNews.set(anotherName, new Msg(anotherName))
       }
       leaveNews.get(anotherName).inputMsg(authorName, msg)
+      if (!usersInChat.get(anotherName)){
+        socket.to(anotherSocketId).emit('is has msg', true)
+      }
     }else{
       socket.to(anotherSocketId).emit("private message", socket.id, msg, authorName);
     }
@@ -87,7 +98,10 @@ io.on("connection", (socket) => {
       console.log('发送离线消息后的le:',leaveNews)
     }
   })
-
+  // 退出登录
+  socket.on('out login',authorName=>{
+    sockets.delete(authorName)
+  })
   // 断开连接后回调函数
   socket.on('disconnect', function () {
     console.log('断开连接!:', socket.id);
