@@ -107,7 +107,7 @@ const getSubNum = async (req,res,next)=>{
   for(let i=0; i<3; i++){
     temp[i] = []
     try{
-      const sql = `select subject_id from web_system.subject${i}`
+      const sql = `select subject_id from web_system.subject${i} where is_private = 0`
       const res = await dbUtil.SysqlConnect(sql, {})
       for(let k in res){
         temp[i].push(res[k].subject_id)
@@ -213,6 +213,7 @@ const createQuestion = async (req,res,next)=>{
     subject_title:_body.subject_title,
     subject_select: _body.subject_select,
     subject_result: _body.subject_result,
+    is_private: _body.is_private
   }
   const aa = await dbUtil.SysqlConnect(sql,sqlObj)
   console.log(aa)
@@ -237,7 +238,7 @@ const createQuestion = async (req,res,next)=>{
   }
   res.send({
     code: 200,
-    data: aa,
+    data: { sbj_id: aa.insertId, sbj_title: _body.subject_title, sbj_type: _body.subject_type},
     msg: '创建题目成功'
   })
 }
@@ -281,6 +282,35 @@ const getFriendList = (req,res,next)=>{
   }
   dbUtil.sqlConnect(sql,sqlObj,callBack)
 }
+//找好友
+const findFriends = (req, res ,next) =>{
+  console.log(req.query)
+  dbUtil.sqlConnect(
+    `select user_id, user_name, user_avatar from web_system.users where user_name like "%${req.query.user_name}%"`,
+    null,
+    (err, result) =>{
+      if(err){
+        return res.send({
+          code:500,
+          msg:'查找失败'
+        })
+      }
+      let index = result && result.findIndex(val=>{
+        return val.user_name === req.user.user_name
+      })
+      if(index >= 0){
+        result.splice(index,1)
+      }
+      console.log(result)
+      res.send({
+        code:200,
+        msg:'成功',
+        data:result,
+        i:req.query
+      })
+    }
+  )
+}
 
 // 获取个人题库信息
 const getPrivateTopic = async (req, res, next)=>{
@@ -318,6 +348,28 @@ const getPrivateTopic = async (req, res, next)=>{
     newResult[i].sbj_tag = [...newarr]
   }
   res.send(newResult)
+}
+// 在题库查看该题
+const watchTopic = (req, res, next) =>{
+  const _body = req.body
+  console.log(_body)
+  dbUtil.sqlConnect(
+    `select subject_select, subject_result from subject${_body.subject_type} where subject_id = ?`,
+    _body.subject_id,
+    (err, result) => {
+      if (err) {
+        return res.send({
+          code:500,
+          msg:'查询该题失败'
+        })
+      }
+      res.send({
+        code:200,
+        msg:'查询成功',
+        data:result
+      })
+    }
+  )
 }
 
 // 题目类    取消收藏||收藏入个人题库
@@ -424,7 +476,9 @@ module.exports = {
   getTag,
   getSubNum,
   getFriendList,
+  findFriends,
   getPrivateTopic,
   collectTopic,
-  hasCollection
+  hasCollection,
+  watchTopic
 }

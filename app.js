@@ -5,6 +5,8 @@ const expressJWT = require('express-jwt')
 const { Server } = require("socket.io");
 // 离线消息类
 const Msg = require('./util/msg')
+// 好友请求类
+const Chum = require('./util/chum')
 // new Msg(whoMsg,whoSend)
 
 // 导入路由
@@ -32,6 +34,9 @@ const leaveNews = new Map() // {who1Msg:new Msg(whoMsg),who2Msg:new Msg(whoMsg)}
 
 //  登录用户是否进入聊天界面
 const usersInChat = new Map() // {whoLogin:true|false}   true:在聊天室 false:不在聊天室但是登录着
+
+// 管理好友请求的对象
+const chumRequests = new Map() // {whomsg1:{author1:new Chum(),whomsg2:new Chum}}
 
 // 连接后处理
 io.on("connection", (socket) => {
@@ -96,6 +101,29 @@ io.on("connection", (socket) => {
       }
       leaveNews.delete(authorName)
       console.log('发送离线消息后的le:',leaveNews)
+    }
+  })
+
+  socket.on('add friend',(author_name, author_id, another_name)=>{
+    if (!chumRequests.has(another_name)){
+      chumRequests.set(another_name,{})
+    }
+    chumRequests.get(another_name)[author_name] = new Chum(author_name, author_id)
+    // 对方在线
+    if(sockets.has(another_name)){
+      socket.to(sockets.get(another_name)).emit('add friend',{
+        author_name,
+        author_id
+      })
+    }
+  })
+
+  // 反馈好友请求  接受||拒绝
+  socket.on('chum request status', (my_name, my_id, his_name, status)=>{
+    if(status === 0){
+      delete chumRequests.get(my_name)[his_name]
+    }else{
+      chumRequests.get(my_name)[his_name].addBuddy(my_id, my_name)
     }
   })
   // 退出登录

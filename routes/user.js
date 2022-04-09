@@ -22,4 +22,7 @@ router.post('/user/collect/topic', dbHandler.collectTopic)
 // 判断该题是否被收藏
 router.post('/user/has/collect', dbHandler.hasCollection)
 
+// 查找好友
+router.get('/user/find/friend', dbHandler.findFriends)
+
 module.exports = router
