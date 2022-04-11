@@ -11,23 +11,22 @@ const secretKey = 'wuyingdong ^*_*^ 123'
 // 保存试题数据
 const subObject = {
   radio:{
-    count:0,
-    listId:[]
+    count: 0,
+    listId: []
   },
   judge:{
-    count:0,
-    listId:[]
+    count: 0,
+    listId: []
   },
   multi:{
-    count:0,
-    listId:[]
-  },
-  
+    count: 0,
+    listId: []
+  }
 }
 // 获取用户信息
 const getUsers = (req, res, next)=> {
   let user = req.user
-  let sql = 'select user_id, user_name,user_phone,user_avatar,user_sex,user_createtime,user_avatar from web_system.users where user_id = ?'
+  let sql = 'select user_id, user_name,user_phone,user_avatar,user_sex,user_createtime,user_avatar from users where user_id = ?'
   let sqlObj = user.user_id
   let callback = (err, result) => {
     if (err) { return console.log('获取信息失败!') }
@@ -42,8 +41,8 @@ const getUsers = (req, res, next)=> {
 }
 
 // 登录账号密码的检测：
-const checkAcount = (req, res, next) => {
-  const sql = 'select * from web_system.users where user_name = ?'
+const LoginAcount = (req, res, next) => {
+  const sql = 'select * from users where user_name = ?'
   const sqlObj = [req.body.userName]
   const callback = (err, result) => {
     if(err){return res.send('400')}
@@ -78,7 +77,7 @@ const checkAcount = (req, res, next) => {
 const registUser = (req, res, next) => {
   console.log(req.body);
   const body = req.body
-  const sql = 'insert into web_system.users SET ?'
+  const sql = 'insert into users SET ?'
   const sqlObj = {
     user_name: body.userName,
     user_password: body.userPassword,
@@ -107,7 +106,7 @@ const getSubNum = async (req,res,next)=>{
   for(let i=0; i<3; i++){
     temp[i] = []
     try{
-      const sql = `select subject_id from web_system.subject${i} where is_private = 0`
+      const sql = `select subject_id from subject${i} where is_private = 0`
       const res = await dbUtil.SysqlConnect(sql, {})
       for(let k in res){
         temp[i].push(res[k].subject_id)
@@ -148,7 +147,7 @@ const getSubject =async (req, res, next) => {
   console.log(arr)
   for(let i=0;i<3;i++){
     if(arr[i].length===0){continue}
-    let sql = `select subject_id,subject_title,subject_select,subject_type from web_system.subject${i} where subject_id in (?)`
+    let sql = `select subject_id,subject_title,subject_select,subject_type from subject${i} where subject_id in (?)`
     let sqlObj = arr[i].length===1?arr[i]: { subject_id:arr[i] }
     try{
       let res
@@ -191,7 +190,7 @@ const commitResult = async (req,res,next)=>{
   // console.log('++++++');
   for(let i=0;i<3;i++){
     if (arr[i].length === 0) { continue }
-    let sql = `select subject_id,subject_result from web_system.subject${i} where subject_id in (?)`
+    let sql = `select subject_id,subject_result from subject${i} where subject_id in (?)`
     let sqlObj = arr[i].length === 1 ? arr[i] : { subject_id: arr[i] }
     const res = await dbUtil.SysqlConnect(sql,sqlObj)
     tall.push(res)
@@ -201,14 +200,9 @@ const commitResult = async (req,res,next)=>{
 }
 
 // 创建题目
-const createQuestion = async (req,res,next)=>{
-/**
- * {
- *    
- * }
- */
+const createQuestion = async (req, res, next)=>{
   const _body = req.body
-  const sql = `insert into web_system.subject${_body.subject_type} set ?`
+  const sql = `insert into subject${_body.subject_type} set ?`
   const sqlObj = {
     subject_title:_body.subject_title,
     subject_select: _body.subject_select,
@@ -223,17 +217,24 @@ const createQuestion = async (req,res,next)=>{
       try {
         // 修改subject_tag表
         await dbUtil.SysqlConnect(
-          `insert into web_system.subject_tag set ?`,  
-          { subject_id: insertId, subject_type: _body.subject_type, tag_id: _body.tags[i] }
+          `insert into subject_tag set ?`,  
+          {
+            subject_id: insertId,
+            subject_type: _body.subject_type,
+            tag_id: _body.tags[i]
+          }
         )
       } catch (err) {
-        res.send({ code: 500, msg: err })
+        res.send({
+          code: 500,
+          msg: err
+        })
       }
     }
   }else{
     return res.send({
-      code:400,
-      msg:'前端错误'
+      code: 400,
+      msg: '前端错误'
     })
   }
   res.send({
@@ -245,7 +246,7 @@ const createQuestion = async (req,res,next)=>{
 
 // 获取标签
 const getTag = (req,res,next)=>{
-  const sql ='select * from web_system.tag order by tag_id asc'
+  const sql ='select * from tag order by tag_id asc'
   const callBack = (err,result)=>{
     if(err){
       return res.send({
@@ -265,7 +266,7 @@ const getTag = (req,res,next)=>{
 // 获取好友信息
 const getFriendList = (req,res,next)=>{
   const user = req.user
-  const sql = 'select friend_id,friend_name,user_name, user_avatar as friend_avatar,last_news as news,last_time as time from(web_system.friend_list as a) left join(web_system.users as b) on a.friend_id = b.user_id where a.user_id = ?'
+  const sql = 'select friend_id,friend_name,user_name, user_avatar as friend_avatar,last_news as news,last_time as time from(friend_list as a) left join(users as b) on a.friend_id = b.user_id where a.user_id = ?'
   const sqlObj = user.user_id
   const callBack = (err , result)=>{
     if(err){
@@ -286,7 +287,7 @@ const getFriendList = (req,res,next)=>{
 const findFriends = (req, res ,next) =>{
   console.log(req.query)
   dbUtil.sqlConnect(
-    `select user_id, user_name, user_avatar from web_system.users where user_name like "%${req.query.user_name}%"`,
+    `select user_id, user_name, user_avatar from users where user_name like "%${req.query.user_name}%"`,
     null,
     (err, result) =>{
       if(err){
@@ -329,7 +330,7 @@ const getPrivateTopic = async (req, res, next)=>{
   // }]
   const user = req.user
   const user_id = user.user_id
-  const sql = 'select id as pri_id, sbj_id, sbj_title, sbj_type from web_system.private_topic where user_id = ?'
+  const sql = 'select id as pri_id, sbj_id, sbj_title, sbj_type from private_topic where user_id = ?'
   const sqlObj = user_id
   const result = await dbUtil.SysqlConnect(sql,sqlObj)
   let newResult = [...result]
@@ -338,7 +339,7 @@ const getPrivateTopic = async (req, res, next)=>{
     let subject_id = result[i].sbj_id
     let subject_type = result[i].sbj_type
     const tags = await dbUtil.SysqlConnect(
-      'SELECT tag_name FROM web_system.subject_tag as a left join web_system.tag as b on a.tag_id = b.tag_id where subject_id = ? and subject_type = ?',
+      'SELECT tag_name FROM subject_tag as a left join tag as b on a.tag_id = b.tag_id where subject_id = ? and subject_type = ?',
       [subject_id, subject_type]
     )
     let newarr = []
@@ -380,31 +381,32 @@ const collectTopic = (req, res, next) =>{
   const sbj_title = req.body.sbj_title
   const status = req.body.status
   const pri_ids = req.body.pri_ids || []
+  // status 0 收藏 1 取消收藏  null 直接删除
   if(status === 0){
     dbUtil.sqlConnect(
-      `insert into web_system.private_topic set ?`,
+      `insert into private_topic set ?`,
       {user_id, sbj_id, sbj_type, sbj_title},
       (err, result) =>{
         if (err) {
           console.log(err)
           return res.send({
-            code:500,
-            msg:'收藏失败',
-            status:0
+            code: 500,
+            msg: '收藏失败',
+            status: 0
           })
         }
         if (result.affectedRows === 1){
           res.send({
-            code:200,
-            msg:'收藏成功',
-            status:1
+            code: 200,
+            msg: '收藏成功',
+            status: 1
           })
         }
       }
     )
   } else if (status === 1){
     dbUtil.sqlConnect(
-      'delete from web_system.private_topic where user_id = ? and sbj_id = ? and sbj_type = ?',
+      'delete from private_topic where user_id = ? and sbj_id = ? and sbj_type = ?',
       [ user_id, sbj_id, sbj_type],
       (err, result) =>{
         if(err){
@@ -426,20 +428,20 @@ const collectTopic = (req, res, next) =>{
     )
   }else{ // 删除题库的某个
       dbUtil.sqlConnect(
-        'delete from web_system.private_topic where( id in (?))',
+        'delete from private_topic where( id in (?))',
         [pri_ids],
         (err, result) =>{
           if(err){
             return res.send({
-              code:500,
-              msg:'操作个人题库失败'
+              code: 500,
+              msg: '操作个人题库失败'
             })
           }
           if(result.affectedRows === pri_ids.length){
             res.send({
-              code:200,
-              msg:'操作成功!',
-              data:result
+              code: 200,
+              msg: '操作成功!',
+              data: result
             })
           }
         }
@@ -453,7 +455,7 @@ const hasCollection = (req, res, next) =>{
   const sbj_id = req.body.sbj_id
   const sbj_type = req.body.sbj_type
   dbUtil.sqlConnect(
-    'select id from web_system.private_topic where user_id = ? and sbj_id = ? and sbj_type = ?',
+    'select id from private_topic where user_id = ? and sbj_id = ? and sbj_type = ?',
     [user_id, sbj_id, sbj_type],
     (err, result) => {3
       if(err){ return res.send('错误')}
@@ -469,7 +471,7 @@ const hasCollection = (req, res, next) =>{
 module.exports = {
   getUsers,
   registUser,
-  checkAcount,
+  LoginAcount,
   getSubject,
   commitResult,
   createQuestion,

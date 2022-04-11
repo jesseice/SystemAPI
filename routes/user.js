@@ -5,7 +5,7 @@ const dbHandler = require('../handle/dbHandler')
 router.get('/user/getInfo', dbHandler.getUsers);
 
 // 登录
-router.post('/api/login', dbHandler.checkAcount);
+router.post('/api/login', dbHandler.LoginAcount);
 
 // 注册
 router.post('/api/regist', dbHandler.registUser);
