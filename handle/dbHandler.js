@@ -194,9 +194,8 @@ const commitResult = async (req,res,next)=>{
   // console.log('++++++');
   for(let i=0;i<3;i++){
     if (arr[i].length === 0) { continue }
-    let sql = `select subject_id,subject_result from subject${i} where subject_id in (?)`
-    let sqlObj = arr[i].length === 1 ? arr[i] : { subject_id: arr[i] }
-    const res = await dbUtil.SysqlConnect(sql,sqlObj)
+    let sql = `select subject_id,subject_result from subject${i} where subject_id in (${arr[i]})`
+    const res = await dbUtil.SysqlConnect(sql,null)
     tall.push(res)
   }
   const r = computed(tall,body)
@@ -214,8 +213,14 @@ const createQuestion = async (req, res, next)=>{
     is_private: _body.is_private
   }
   const aa = await dbUtil.SysqlConnect(sql,sqlObj)
-  console.log(aa)
-  let insertId = aa.insertId
+  console.log('aa',aa)
+  let insertId =aa && aa.insertId
+  if(!insertId){
+    return res.send({
+      code:400,
+      msg:'题库已有本题目'
+    })
+  }
   if (aa&&aa.affectedRows === 1){
     for (let i = 0; i < _body.tags.length; i++) {
       try {
