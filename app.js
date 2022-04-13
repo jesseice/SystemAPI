@@ -47,7 +47,7 @@ io.on("connection", (socket) => {
     sockets.set(user_name,socket.id)
     usersInChat.set(user_name,false)
     // console.log(1);
-    console.log(sockets)
+    // console.log(sockets)
   })  
 
   // 进入聊天页面设置usersInChat的状态
