@@ -185,7 +185,6 @@ const commitResult = async (req,res,next)=>{
       arr[k].push(sk)
     }
   }
-
   let tall = []
   // console.log('++++++');
   // console.log(arr);
@@ -197,7 +196,11 @@ const commitResult = async (req,res,next)=>{
     tall.push(res)
   }
   const r = computed(tall,body)
-  res.send(r)
+  res.send({
+    code:200,
+    msg:'批改成功',
+    data:r
+  })
 }
 
 // 创建题目

@@ -18,6 +18,7 @@ const computed = (apiData,reqBody)=>{
   let zq = 0
   let count = 0
   let errId = {0:[],1:[],2:[]}  
+  // 答案对象
   let apiObj = {0:{},1:{},2:{}}
   apiData.forEach((val,ind)=>{
     //val =  [{},{}]
