@@ -23,6 +23,14 @@ const subObject = {
     listId: []
   }
 }
+const reSetSbj = (sbjObject)=>{
+  for(let k in sbjObject){
+    sbjObject[k] = {
+      count: 0,
+      listId: []
+    }
+  }
+}
 // 获取用户信息
 const getUsers = (req, res, next)=> {
   let user = req.user
@@ -103,6 +111,7 @@ const registUser = (req, res, next) => {
 const getSubNum = async (req,res,next)=>{
   // let radio = 0, judge = 0, multi = 0
   let temp = []
+  reSetSbj(subObject)
   for(let i=0; i<3; i++){
     temp[i] = []
     try{
@@ -125,9 +134,6 @@ const getSubNum = async (req,res,next)=>{
     subObject[k].count = temp[cur].length > 100 ? 100 : temp[cur].length
     cur++
   }
-  console.log('subObject----------------')
-  console.log(subObject)
-  console.log('subObject----------------')
   res.send({
     code:'200',
     msg:'获取成功',
@@ -139,16 +145,12 @@ const getSubNum = async (req,res,next)=>{
 // 获取随机考试试题
 const getSubject =async (req, res, next) => {
   //random的参数需要冲req.body中取   或者不用
-  // console.log('---');
-  // console.log(req.body);
-  // console.log('---');
   const _body = req.body
   let subject = []
   let arr = [random(subObject.radio, _body[0]), random(subObject.judge, _body[1]), random(subObject.multi, _body[2])]
-  console.log("arr--------")
-  console.log(arr)
-  console.log(_body)
-  console.log("arr--------")
+  // console.log('------')
+  // console.log(arr)
+  // console.log('------')
   for(let i=0;i<3;i++){
     if(arr[i].length===0){continue}
     let sql = `select subject_id,subject_title,subject_select,subject_type from subject${i} where subject_id in (${arr[i]})`
@@ -164,10 +166,6 @@ const getSubject =async (req, res, next) => {
       })
     }
   }
-  // console.log('----')
-  // console.log(arr)
-  // console.log(subject)
-  // console.log('----')
   res.send({
     code: 200,
     msg: '获取成功',
