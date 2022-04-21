@@ -7,7 +7,8 @@ module.exports = {
     port:'3306',
     user:'root',
     password:'admin123',
-    database:'web_system'
+    database:'web_system',
+    connectionLimit:100
   },
   // 连接数据库，使用mysql的连接池方式
   // 连接池对象
@@ -22,11 +23,14 @@ module.exports = {
       conn.release()
     })
   },
-
   // promise 回调
   SysqlConnect:function(sySql,sqlObj){
     return new Promise((resolve,reject)=>{
       let pool = mysql.createPool(this.config)
+
+      pool.on('release', function (connection) {
+        console.log('connection', connection)
+      });
       pool.getConnection((err,conn)=>{
         if(err){
           reject(err)

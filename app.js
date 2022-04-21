@@ -3,10 +3,9 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const expressJWT = require('express-jwt')
 const { Server } = require("socket.io");
+const dbHandler = require('./handle/dbHandler')
 // 离线消息类
 const Msg = require('./util/msg')
-// 好友请求类
-const Chum = require('./util/chum')
 // new Msg(whoMsg,whoSend)
 
 // 导入路由
@@ -36,7 +35,7 @@ const leaveNews = new Map() // {who1Msg:new Msg(whoMsg),who2Msg:new Msg(whoMsg)}
 const usersInChat = new Map() // {whoLogin:true|false}   true:在聊天室 false:不在聊天室但是登录着
 
 // 管理好友请求的对象
-const chumRequests = new Map() // {whomsg1:{author1:new Chum(),whomsg2:new Chum}}
+const chumS = new Map() // {whomsg1:[{ fri_id: author_id, fri_name: author_name}]}
 
 // 连接后处理
 io.on("connection", (socket) => {
@@ -46,20 +45,16 @@ io.on("connection", (socket) => {
   socket.on('set sockets',(user_name)=>{
     sockets.set(user_name,socket.id)
     usersInChat.set(user_name,false)
-    // console.log(1);
-    // console.log(sockets)
   })  
 
   // 进入聊天页面设置usersInChat的状态
   socket.on('is in chat page',(user_name, bool)=>{
     usersInChat.set(user_name,bool)
-    console.log(2);
   })
 
   // 是否有消息
   socket.on('is has msg', (authorName) => {
-    // console.log('进来了了:',authorName);
-    socket.emit('is has msg', leaveNews.has(authorName))
+    socket.emit('is has msg', leaveNews.has(authorName) || chumS.has(authorName))
   })
 
   // 点击好友时候查找好友的socketId
@@ -104,26 +99,45 @@ io.on("connection", (socket) => {
     }
   })
 
-  socket.on('add friend',(author_name, author_id, another_name)=>{
-    if (!chumRequests.has(another_name)){
-      chumRequests.set(another_name,{})
-    }
-    chumRequests.get(another_name)[author_name] = new Chum(author_name, author_id)
-    // 对方在线
-    if(sockets.has(another_name)){
-      socket.to(sockets.get(another_name)).emit('add friend',{
-        author_name,
-        author_id
-      })
+  // ano 谁的好友信息，aut是谁发的
+  socket.on('add friend', (anotherId, anotherName, authorId, authorName, authorAvatar)=>{
+    if (sockets.has(anotherName) && usersInChat.get(anotherName)){
+      let anotherSocketId = sockets.get(anotherName)
+      socket.to(anotherSocketId).emit('add friend', authorId, authorName, authorAvatar)
+    }else{
+      if (!chumS.has(anotherName)){
+        chumS.set(anotherName,[])
+      }
+      chumS.get(anotherName).push({ fri_id: authorId, fri_name: authorName, fri_avatar: authorAvatar})
+      socket.to(sockets.get(anotherName)).emit('is has msg', true)
     }
   })
 
-  // 反馈好友请求  接受||拒绝
-  socket.on('chum request status', (my_name, my_id, his_name, status)=>{
-    if(status === 0){
-      delete chumRequests.get(my_name)[his_name]
+  // 上线后检查是否有离线的添加好友请求信息
+  socket.on('check leave chum req', authorName =>{
+    if (chumS.has(authorName) && chumS.get(authorName).length){
+      socket.emit('check leave chum req', chumS.get(authorName))
+    }
+  })
+
+  // 反馈好友请求  接受1||拒绝0
+  socket.on('chum request status', async (authorId, authorName, anotherId, anotherName, status)=>{
+    if(status){
+      console.log(`${authorName}接受了${anotherName}的好友请求`)
+      let flag1 = await dbHandler.becomeFri(authorId, anotherId, anotherName)
+      let flag2 = await dbHandler.becomeFri(anotherId, authorId, authorName)
+      socket.emit('back fri req status', flag1 && flag2)
+      socket.to(sockets.get(anotherName)).emit('back fri req status', flag1 && flag2)
     }else{
-      chumRequests.get(my_name)[his_name].addBuddy(my_id, my_name)
+      console.log(`${authorName}拒绝了${anotherName}的好友请求`)
+    }
+    // 处理反馈后删除chumS对象中保存的东西
+    let tempArr = chumS.get(authorName)
+    if (!tempArr){return false}
+    let index = tempArr.findIndex(val => val.fri_id === anotherId)
+    chumS.get(authorName).splice(index, 1)
+    if(tempArr.length === 1){
+      chumS.delete(authorName)
     }
   })
   // 退出登录

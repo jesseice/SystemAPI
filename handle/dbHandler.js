@@ -312,7 +312,6 @@ const findFriends = (req, res ,next) =>{
       if(index >= 0){
         result.splice(index,1)
       }
-      console.log(result)
       res.send({
         code:200,
         msg:'成功',
@@ -321,6 +320,26 @@ const findFriends = (req, res ,next) =>{
       })
     }
   )
+}
+// 成为好友
+const becomeFri =(user_id, friend_id, friend_name) =>{
+  // console.log('这是become', { user_id, friend_id, friend_name})
+  return new Promise((resolve, reject)=>{
+    dbUtil.sqlConnect(
+      'insert into friend_list set ?',
+      { user_id: user_id, friend_id: friend_id, friend_name: friend_name },
+      (err, result)=>{
+        if(err){
+          reject(false)
+        }
+        if (result.affectedRows === 1){
+          console.log('insertId', result.insertId)
+          resolve(true)
+        }
+      }
+    )
+    
+  }).catch((err)=>{console.log(err)})
 }
 
 // 获取个人题库信息
@@ -365,8 +384,8 @@ const watchTopic = (req, res, next) =>{
   const _body = req.body
   console.log(_body)
   dbUtil.sqlConnect(
-    `select subject_select, subject_result from subject${_body.subject_type} where subject_id = ?`,
-    _body.subject_id,
+    `select subject_select, subject_result from subject${_body.subject_type} where subject_id = ${_body.subject_id}`,
+    null,
     (err, result) => {
       if (err) {
         return res.send({
@@ -492,5 +511,6 @@ module.exports = {
   getPrivateTopic,
   collectTopic,
   hasCollection,
-  watchTopic
+  watchTopic,
+  becomeFri
 }
