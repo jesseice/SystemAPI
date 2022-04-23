@@ -27,10 +27,6 @@ module.exports = {
   SysqlConnect:function(sySql,sqlObj){
     return new Promise((resolve,reject)=>{
       let pool = mysql.createPool(this.config)
-
-      pool.on('release', function (connection) {
-        console.log('connection', connection)
-      });
       pool.getConnection((err,conn)=>{
         if(err){
           reject(err)

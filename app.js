@@ -54,7 +54,7 @@ io.on("connection", (socket) => {
 
   // 是否有消息
   socket.on('is has msg', (authorName) => {
-    socket.emit('is has msg', leaveNews.has(authorName) || chumS.has(authorName))
+    socket.emit('is has msg', leaveNews.has(authorName) || chumS.has(authorName)) 
   })
 
   // 点击好友时候查找好友的socketId
@@ -133,10 +133,11 @@ io.on("connection", (socket) => {
     }
     // 处理反馈后删除chumS对象中保存的东西
     let tempArr = chumS.get(authorName)
+    let len = tempArr.length
     if (!tempArr){return false}
     let index = tempArr.findIndex(val => val.fri_id === anotherId)
     chumS.get(authorName).splice(index, 1)
-    if(tempArr.length === 1){
+    if (len === 1){
       chumS.delete(authorName)
     }
   })

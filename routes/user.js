@@ -25,4 +25,10 @@ router.post('/user/has/collect', dbHandler.hasCollection)
 // 查找好友
 router.get('/user/find/friend', dbHandler.findFriends)
 
+// 修改资料
+router.post('/user/set/info', dbHandler.setInfo)
+
+// 修改密码
+router.post('/user/set/password', dbHandler.setPassword)
+
 module.exports = router

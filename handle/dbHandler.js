@@ -1,7 +1,7 @@
 const dbUtil = require('../util/dbconfig')
 const random = require('../util/random')
 const computed = require('../util/computed')
-// const crypto = require('../util/crypto')
+const crypto = require('../util/crypto')
 
 const jwt = require('jsonwebtoken')
 const { send } = require('express/lib/response')
@@ -496,6 +496,72 @@ const hasCollection = (req, res, next) =>{
     }
   )
 }
+// 修改个人信息
+const setInfo = (req, res, next)=>{
+  // console.log(req.body)
+  const _body = req.body
+  let prop
+  if(_body.name === 'user_phone'){
+    prop = 'user_phone'
+  }else if(_body.name === 'user_sex'){
+    prop = 'user_sex'
+  }else{
+    return res.send({
+      code:400,
+      msg:'属性名非法'
+    })
+  }
+
+  const sql = `update users set ${prop} = '${_body.value}' where user_id = ${req.user.user_id}`
+  const callBack = (err, result) =>{
+    if(err){
+      return res.send({
+        code:500,
+        msg:'未知错误!',
+        data:err
+      })
+    }
+    res.send({
+      code:200,
+      msg:'更新成功!'
+    })
+  }
+  dbUtil.sqlConnect(sql,null, callBack)
+}
+
+// 修改密码
+const setPassword = async (req, res, next) =>{
+  const _body = req.body
+  const r = await dbUtil.SysqlConnect(
+    `select user_password from users where user_id = ${req.user.user_id}`,
+    null
+  )
+  let sqlpass = crypto.Decrypt(r[0].user_password) 
+  let newpass = crypto.Encrypt(_body.newPassword)
+  if(sqlpass === _body.oldPassword){
+    dbUtil.sqlConnect(
+      `update users set user_password = '${newpass}' where user_id = ${req.user.user_id}`,
+      null,
+      (err, result)=>{
+        if(err){
+          return res.send({
+            code:500,
+            msg:'未知错误'
+          })
+        }
+        res.send({
+          code: 200,
+          msg: '修改密码成功!'
+        })
+      }
+    )
+  }else{
+    res.send({
+      code: 400,
+      msg:'旧密码错误'
+    })
+  }
+}
 
 module.exports = {
   getUsers,
@@ -512,5 +578,7 @@ module.exports = {
   collectTopic,
   hasCollection,
   watchTopic,
-  becomeFri
+  becomeFri,
+  setInfo,
+  setPassword
 }
