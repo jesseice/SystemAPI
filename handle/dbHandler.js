@@ -563,6 +563,23 @@ const setPassword = async (req, res, next) =>{
   }
 }
 
+const upAvatar = (req, res, url)=>{
+  const sql = `update users set user_avatar = '${url}' where user_id = ${req.user.user_id}`
+  const callBack = (err, result) =>{
+    if(err){
+      return res.send({
+        code:500,
+        msg:'未知错误'
+      })
+    }
+    res.send({
+      code:200,
+      msg:'修改头像成功'
+    })
+  }
+  dbUtil.sqlConnect(sql, null, callBack)
+}
+
 module.exports = {
   getUsers,
   registUser,
@@ -580,5 +597,6 @@ module.exports = {
   watchTopic,
   becomeFri,
   setInfo,
-  setPassword
+  setPassword,
+  upAvatar
 }

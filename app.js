@@ -25,6 +25,14 @@ const io = new Server(server, {
   }
 })
 
+// 创建formidable实例
+const { IncomingForm } = require('formidable');
+const fs = require('fs')
+const form = new IncomingForm({
+  uploadDir: path.join(__dirname, 'public/uploads'),
+  keepExtensions: true
+})
+
 // 管理登录用户集合
 const sockets = new Map() // {who1Login:socketId, who2Login:socketId}
 
@@ -167,7 +175,21 @@ app.use(expressJWT({ secret: secretKey, algorithms: ['HS256'] }).unless({ path: 
 app.use('/', userRouter);
 app.use('/', examRouter)
 app.use('/', createQRouter)
-// ---------------------------------------
+// 上传头像
+app.post('/user/upload/avatar', (req, res, next) => {
+  form.parse(req, (err, fields, files) => {
+    let arr = files.file.newFilename.split('.')
+    fs.rename(`./public/uploads/${arr[0]}.${arr[1]}`, `./public/uploads/ava${req.user.user_name}tar.${arr[1]}`, (err) => {
+      if (err) {
+        console.log(err)
+        return
+      }
+    })
+    console.log(arr)
+    let url = `http://localhost:5000/uploads/ava${req.user.user_name}tar.${arr[1]}`
+    dbHandler.upAvatar(req, res, url)
+  })
+})
 
 app.use((err,req,res,next)=>{
   if (err.name === 'UnauthorizedError'){
@@ -182,5 +204,5 @@ app.use((err,req,res,next)=>{
   })
 })
 
-server.listen(3000)
+server.listen(5000)
 
