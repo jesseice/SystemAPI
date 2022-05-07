@@ -177,8 +177,10 @@ app.use('/', examRouter)
 app.use('/', createQRouter)
 // 上传头像
 app.post('/user/upload/avatar', (req, res, next) => {
+  // 解析收到的表单数据
   form.parse(req, (err, fields, files) => {
     let arr = files.file.newFilename.split('.')
+    // 对文件重命名，命名加上该用户的用户名
     fs.rename(`./public/uploads/${arr[0]}.${arr[1]}`, `./public/uploads/ava${req.user.user_name}tar.${arr[1]}`, (err) => {
       if (err) {
         console.log(err)
@@ -186,12 +188,15 @@ app.post('/user/upload/avatar', (req, res, next) => {
       }
     })
     console.log(arr)
+    // 设置文件的路径，
     let url = `http://localhost:5000/uploads/ava${req.user.user_name}tar.${arr[1]}`
+    // 将文件地址存入数据库
     dbHandler.upAvatar(req, res, url)
   })
 })
 
 app.use((err,req,res,next)=>{
+  console.log('错误中间件:', err)
   if (err.name === 'UnauthorizedError'){
     return res.send({
       code:1004,

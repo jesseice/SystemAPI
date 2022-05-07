@@ -146,6 +146,8 @@ const getSubNum = async (req,res,next)=>{
 const getSubject =async (req, res, next) => {
   //random的参数需要冲req.body中取   或者不用
   const _body = req.body
+  console.log('------')
+  console.log(_body)
   let subject = []
   let arr = [random(subObject.radio, _body[0]), random(subObject.judge, _body[1]), random(subObject.multi, _body[2])]
   // console.log('------')
@@ -377,7 +379,10 @@ const getPrivateTopic = async (req, res, next)=>{
     })
     newResult[i].sbj_tag = [...newarr]
   }
-  res.send(newResult)
+  res.send({
+    code:200,
+    data: newResult
+  })
 }
 // 在题库查看该题
 const watchTopic = (req, res, next) =>{

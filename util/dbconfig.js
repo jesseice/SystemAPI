@@ -18,9 +18,18 @@ module.exports = {
       if(err) return console.log('连接失败');
 
       // 事件驱动回调
-      conn.query(sql,sqlArr,callBack);
-      //释放连接
-      conn.release()
+      conn.query(sql, sqlArr, function (error, results, fields) {
+        // When done with the connection, release it.
+        conn.release()
+        callBack(error, results)
+
+        // Handle error after the release.
+        // if (error) throw error
+
+        // Don't use the connection here, it has been returned to the pool.
+      })
+      // 释放连接
+      // conn.release()
     })
   },
   // promise 回调
@@ -32,13 +41,14 @@ module.exports = {
           reject(err)
         }else{
           conn.query(sySql,sqlObj,(err,data)=>{
+            conn.release()
             if(err){
               reject(err)
             }else{
               resolve(data)
             }
           })
-          conn.release()
+          // conn.release()
         }
       })
     }).catch((err)=>{
